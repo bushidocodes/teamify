@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+manpage() {
+  echo -e " NAME\n\tteamify - Generate a random team.\n\n" \
+    "SYNOPSIS\n\tteamify [-n size] <somefile.txt\n\n" \
+    "DESCRIPTION\n\tGiven a list of names, generates random team assignments. Intended to be used as a filter, so provide input via a pipe or file\n\n\t-n 6\t sets the team size. Default is 4\n\n" \
+    "AUTHOR\n\tWritten by Sean McBride"
+}
+
+main() {
+  size=4
+
+  while getopts n:h option; do
+    case "${option}" in
+      n)
+        size=${OPTARG}
+        shift 2
+        ;;
+      h | *)
+        manpage
+        exit 0
+        ;;
+    esac
+  done
+
+  sed -e "s/[[:space:]]\+/ /g" |
+    shuf |
+    awk ' 
+      (NR-1)%'"$size"'==0 {printf "Team " int(NR / '"$size"') + 1":\n👑 " $0 "\n"}
+      (NR-1)%'"$size"'== '"$size -1"' {printf $0 "\n\n" }
+      (NR-1)%'"$size"'!=0 && (NR-1)%'"$size"' != '"$size -1"' {printf $0 "\n" }
+    '
+}
+
+main "$@"
